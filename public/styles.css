@@ -371,13 +371,8 @@ select {
 }
 
 .side-hands.left {
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: flex-start;
-}
-
-.side-hands.right {
-  justify-content: flex-end;
-  align-items: flex-end;
 }
 
 .tile {
