@@ -52,6 +52,7 @@
     let movable = new Set();
     let selectedHand = null;
     let gameOver = false;
+    let turnOwner = 1;
 
     const hands = {
       1: new Map(),
@@ -69,7 +70,7 @@
       const data = storage.getGame(gname);
       if (!data) throw new Error(`ゲームが見つかりません: ${gname}`);
       gameData = data;
-      statusEl.textContent = `読み込み: ${gname}`;
+      statusEl.textContent = `読み込み: ${gname} / ${turnOwner}Pの手番`;
     }
 
     function loadBoard() {
@@ -155,6 +156,7 @@
           }
           btn.textContent = `${pieceChar(piece)} x${count}`;
           btn.onclick = () => {
+            if (gameOver || owner !== turnOwner) return;
             selected = null;
             movable.clear();
             selectedHand = { owner, piece };
@@ -193,19 +195,13 @@
         const dx = v0.dx * sign;
         const dy = v0.dy * sign;
         if (dx === 0 && dy === 0) continue;
-        for (let k = 0; ; k++) {
-          const m = 1 + stride * k;
-          const tx = px + dx * m;
-          const ty = py + dy * m;
-          const key = `${tx},${ty}`;
-          if (!inBoard(tx, ty) || bset.has(key)) break;
-          const there = getPieceAt(tx, ty);
-          if (there) {
-            if (there.owner !== owner) out.push({ x: tx, y: ty });
-            break;
-          }
-          out.push({ x: tx, y: ty });
-        }
+        const tx = px + dx;
+        const ty = py + dy;
+        const key = `${tx},${ty}`;
+        if (!inBoard(tx, ty) || bset.has(key)) continue;
+        const there = getPieceAt(tx, ty);
+        if (there && there.owner === owner) continue;
+        out.push({ x: tx, y: ty });
       }
       return out;
     }
@@ -244,14 +240,18 @@
           cell.onclick = () => {
             if (gameOver || bset.has(key)) return;
             if (selectedHand) {
+              if (selectedHand.owner !== turnOwner) return;
               if (pieces.has(key)) return;
               pieces.set(key, { piece: selectedHand.piece, owner: selectedHand.owner });
               removeHand(selectedHand.owner, selectedHand.piece);
               selectedHand = null;
+              turnOwner = turnOwner === 1 ? 2 : 1;
+              statusEl.textContent = `${turnOwner}Pの手番`;
               render();
               return;
             }
             if (selected && movable.has(key)) {
+              if (selected.owner !== turnOwner) return;
               const fromKey = `${selected.x},${selected.y}`;
               const target = getPieceAt(x, y);
               if (target && target.owner !== selected.owner) {
@@ -266,11 +266,16 @@
               pieces.set(key, { piece: selected.piece, owner: selected.owner });
               selected = null;
               movable.clear();
+              if (!gameOver) {
+                turnOwner = turnOwner === 1 ? 2 : 1;
+                statusEl.textContent = `${turnOwner}Pの手番`;
+              }
               render();
               return;
             }
             if (pieces.has(key)) {
               const info = pieces.get(key);
+              if (info.owner !== turnOwner) return;
               selectedHand = null;
               selected = { x, y, piece: info.piece, owner: info.owner };
               render();
