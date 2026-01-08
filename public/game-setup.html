@@ -109,6 +109,14 @@
       return "駒";
     }
 
+    function kingCountByOwner(owner) {
+      const king = kingPieceEl.value;
+      if (!king) return 0;
+      return Array.from(placements.values()).filter(
+        (p) => p.owner === owner && p.piece === king
+      ).length;
+    }
+
     function loadPieces() {
       const list = storage.listPieces();
       pieceListEl.innerHTML = "";
@@ -140,6 +148,7 @@
       if (desiredKing) {
         kingPieceEl.value = desiredKing;
       }
+      pieceListEl.disabled = !kingPieceEl.value;
     }
 
     function loadBoards() {
@@ -212,12 +221,16 @@
             cell.classList.add("blocked");
           } else {
             cell.onclick = () => {
+              if (!kingPieceEl.value) {
+                errEl.textContent = "王・キングの駒を先に選択してください。";
+                return;
+              }
               const sel = pieceListEl.value;
               if (!sel) return;
               if (sel === kingPieceEl.value) {
-                const exists = Array.from(placements.values()).some((p) => p.piece === sel);
+                const exists = kingCountByOwner(currentOwner);
                 if (!placements.has(key) && exists) {
-                  errEl.textContent = "王・キングの駒は1つだけ配置できます。";
+                  errEl.textContent = "王・キングの駒は各陣営1つだけ配置できます。";
                   return;
                 }
               }
@@ -278,11 +291,10 @@
         errEl.textContent = "王・キングの駒を選択してください。";
         return;
       }
-      const kingCount = Array.from(placements.values()).filter(
-        (p) => p.piece === kingPieceEl.value
-      ).length;
-      if (kingCount !== 1) {
-        errEl.textContent = "王・キングの駒は1つだけ配置してください。";
+      const kingCount1 = kingCountByOwner(1);
+      const kingCount2 = kingCountByOwner(2);
+      if (kingCount1 !== 1 || kingCount2 !== 1) {
+        errEl.textContent = "王・キングの駒は各陣営1つずつ配置してください。";
         return;
       }
       const data = buildGameData(gname);
@@ -303,6 +315,9 @@
     btnP2.onclick = () => setOwner(2);
     saveBtn.onclick = () => saveGame(false);
     playBtn.onclick = () => saveGame(true);
+    kingPieceEl.addEventListener("change", () => {
+      pieceListEl.disabled = !kingPieceEl.value;
+    });
 
     loadGameForEdit();
     loadPieces();
