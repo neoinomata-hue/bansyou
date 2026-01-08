@@ -20,6 +20,14 @@
     <section class="board-area">
       <div class="board-wrap">
         <div id="board" class="board"></div>
+        <div id="hand-p2" class="hand p2">
+          <div class="hand-title">2P 持ち駒</div>
+          <div class="hand-list" id="hand-list-p2"></div>
+        </div>
+        <div id="hand-p1" class="hand p1">
+          <div class="hand-title">1P 持ち駒</div>
+          <div class="hand-list" id="hand-list-p1"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -28,6 +36,10 @@
   <script>
     const boardEl = document.getElementById("board");
     const statusEl = document.getElementById("status");
+    const handP1El = document.getElementById("hand-p1");
+    const handP2El = document.getElementById("hand-p2");
+    const handListP1El = document.getElementById("hand-list-p1");
+    const handListP2El = document.getElementById("hand-list-p2");
     const storage = window.BansyouStorage;
 
     let gameData = null;
@@ -36,6 +48,13 @@
     let pieces = new Map();
     let selected = null;
     let movable = new Set();
+    let selectedHand = null;
+    let gameOver = false;
+
+    const hands = {
+      1: new Map(),
+      2: new Map()
+    };
 
     function queryGameName() {
       const url = new URL(location.href);
@@ -89,6 +108,59 @@
 
     function getPieceAt(x, y) {
       return pieces.get(`${x},${y}`) || null;
+    }
+
+    function addHand(owner, piece) {
+      const map = hands[owner];
+      const count = map.get(piece) || 0;
+      map.set(piece, count + 1);
+      renderHands();
+    }
+
+    function removeHand(owner, piece) {
+      const map = hands[owner];
+      const count = map.get(piece) || 0;
+      if (count <= 1) map.delete(piece);
+      else map.set(piece, count - 1);
+      renderHands();
+    }
+
+    function renderHands() {
+      const dropsEnabled = gameData.rules?.drops?.enabled ?? true;
+      handP1El.style.display = dropsEnabled ? "block" : "none";
+      handP2El.style.display = dropsEnabled ? "block" : "none";
+      handListP1El.innerHTML = "";
+      handListP2El.innerHTML = "";
+      if (!dropsEnabled) {
+        selectedHand = null;
+        return;
+      }
+
+      [1, 2].forEach((owner) => {
+        const listEl = owner === 1 ? handListP1El : handListP2El;
+        const entries = Array.from(hands[owner].entries());
+        if (!entries.length) {
+          const span = document.createElement("span");
+          span.textContent = "なし";
+          listEl.appendChild(span);
+          return;
+        }
+        entries.forEach(([piece, count]) => {
+          const btn = document.createElement("button");
+          btn.className = "hand-btn";
+          if (selectedHand && selectedHand.owner === owner && selectedHand.piece === piece) {
+            btn.classList.add("active");
+          }
+          btn.textContent = `${pieceChar(piece)} x${count}`;
+          btn.onclick = () => {
+            selected = null;
+            movable.clear();
+            selectedHand = { owner, piece };
+            render();
+          };
+          listEl.appendChild(btn);
+        });
+      });
     }
 
     function computeMoves(px, py, pieceKey, owner) {
@@ -168,9 +240,26 @@
             cell.appendChild(span);
           }
           cell.onclick = () => {
-            if (bset.has(key)) return;
+            if (gameOver || bset.has(key)) return;
+            if (selectedHand) {
+              if (pieces.has(key)) return;
+              pieces.set(key, { piece: selectedHand.piece, owner: selectedHand.owner });
+              removeHand(selectedHand.owner, selectedHand.piece);
+              selectedHand = null;
+              render();
+              return;
+            }
             if (selected && movable.has(key)) {
               const fromKey = `${selected.x},${selected.y}`;
+              const target = getPieceAt(x, y);
+              if (target && target.owner !== selected.owner) {
+                addHand(selected.owner, target.piece);
+                const king = gameData.rules?.kingPiece || "";
+                if (king && target.piece === king) {
+                  gameOver = true;
+                  statusEl.textContent = `${selected.owner}P の勝ち（王を取りました）`;
+                }
+              }
               pieces.delete(fromKey);
               pieces.set(key, { piece: selected.piece, owner: selected.owner });
               selected = null;
@@ -180,6 +269,7 @@
             }
             if (pieces.has(key)) {
               const info = pieces.get(key);
+              selectedHand = null;
               selected = { x, y, piece: info.piece, owner: info.owner };
               render();
               const moves = computeMoves(x, y, selected.piece, selected.owner);
@@ -195,6 +285,7 @@
               return;
             }
             selected = null;
+            selectedHand = null;
             movable.clear();
             render();
           };
@@ -213,6 +304,7 @@
           if (c2) c2.classList.add(cls);
         }
       }
+      renderHands();
     }
 
     (function init() {
@@ -221,6 +313,7 @@
         loadBoard();
         loadPiecesDefs();
         loadPiecesFromGame();
+        renderHands();
         render();
       } catch (e) {
         statusEl.textContent = `エラー: ${e.message}`;

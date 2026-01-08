@@ -170,6 +170,7 @@ select {
   border-radius: 12px;
   box-shadow: 0 18px 25px rgba(45, 34, 22, 0.2);
   overflow: hidden;
+  position: relative;
 }
 
 .board {
@@ -235,6 +236,56 @@ select {
 .cell.movable-p2 {
   outline: 3px solid rgba(255, 255, 255, 0.9);
   outline-offset: -3px;
+}
+
+.hand {
+  position: absolute;
+  min-width: 120px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 10px 16px rgba(45, 34, 22, 0.2);
+  font-size: 12px;
+}
+
+.hand.p1 {
+  right: 8px;
+  bottom: 8px;
+}
+
+.hand.p2 {
+  left: 8px;
+  top: 8px;
+}
+
+.hand-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.hand-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hand-btn {
+  border: 1px solid rgba(45, 34, 22, 0.2);
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.hand-btn.active {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.turn-info {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .hero {

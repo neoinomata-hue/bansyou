@@ -43,6 +43,12 @@
       </div>
 
       <div class="card">
+        <div class="label">王・キングの駒</div>
+        <select id="king-piece"></select>
+        <div class="note">この駒は1つだけ配置できます。取られると勝敗が決まります。</div>
+      </div>
+
+      <div class="card">
         <div class="label">持ち駒ルール</div>
         <label class="note">
           <input type="checkbox" id="drops-enabled" checked>
@@ -74,6 +80,7 @@
     const boardEl = document.getElementById("board");
     const gameNameEl = document.getElementById("game-name");
     const dropsEnabledEl = document.getElementById("drops-enabled");
+    const kingPieceEl = document.getElementById("king-piece");
     const saveBtn = document.getElementById("save");
     const playBtn = document.getElementById("play");
     const okEl = document.getElementById("ok");
@@ -88,6 +95,7 @@
     let boardData = null;
     const placements = new Map();
     let loadedGameData = null;
+    let desiredKing = "";
 
     function setOwner(owner) {
       currentOwner = owner;
@@ -104,12 +112,15 @@
     function loadPieces() {
       const list = storage.listPieces();
       pieceListEl.innerHTML = "";
+      kingPieceEl.innerHTML = "";
       if (list.length === 0) {
         const opt = document.createElement("option");
         opt.value = "";
         opt.textContent = "保存された駒がありません";
         pieceListEl.appendChild(opt);
         pieceListEl.disabled = true;
+        kingPieceEl.appendChild(opt.cloneNode(true));
+        kingPieceEl.disabled = true;
         return;
       }
       list.forEach((p) => {
@@ -118,8 +129,17 @@
         opt.textContent = p.name;
         opt.dataset.char = p.char || "駒";
         pieceListEl.appendChild(opt);
+
+        const opt2 = document.createElement("option");
+        opt2.value = p.name;
+        opt2.textContent = p.name;
+        kingPieceEl.appendChild(opt2);
       });
       pieceListEl.disabled = false;
+      kingPieceEl.disabled = false;
+      if (desiredKing) {
+        kingPieceEl.value = desiredKing;
+      }
     }
 
     function loadBoards() {
@@ -170,6 +190,7 @@
       loadedGameData = data;
       gameNameEl.value = data.name || "";
       dropsEnabledEl.checked = data.rules?.drops?.enabled ?? true;
+      desiredKing = data.rules?.kingPiece || "";
       okEl.textContent = `編集モード: ${editGameName}`;
     }
 
@@ -193,6 +214,13 @@
             cell.onclick = () => {
               const sel = pieceListEl.value;
               if (!sel) return;
+              if (sel === kingPieceEl.value) {
+                const exists = Array.from(placements.values()).some((p) => p.piece === sel);
+                if (!placements.has(key) && exists) {
+                  errEl.textContent = "王・キングの駒は1つだけ配置できます。";
+                  return;
+                }
+              }
               if (placements.has(key)) {
                 placements.delete(key);
               } else {
@@ -232,7 +260,8 @@
             enabled: dropsEnabledEl.checked,
             allowFusionDrop: false,
             dropZones: []
-          }
+          },
+          kingPiece: kingPieceEl.value || ""
         }
       };
     }
@@ -243,6 +272,17 @@
       const gname = (gameNameEl.value || "").trim();
       if (!gname) {
         errEl.textContent = "ゲーム名を入力してください。";
+        return;
+      }
+      if (!kingPieceEl.value) {
+        errEl.textContent = "王・キングの駒を選択してください。";
+        return;
+      }
+      const kingCount = Array.from(placements.values()).filter(
+        (p) => p.piece === kingPieceEl.value
+      ).length;
+      if (kingCount !== 1) {
+        errEl.textContent = "王・キングの駒は1つだけ配置してください。";
         return;
       }
       const data = buildGameData(gname);
