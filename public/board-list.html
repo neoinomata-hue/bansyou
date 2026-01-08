@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>盤一覧 - 盤匠</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="page">
+  <header class="topbar">
+    <button class="btn ghost" onclick="location.href='./index.html'">ホーム</button>
+    <div>
+      <div class="brand">盤一覧</div>
+      <div class="subtitle">確認・編集・削除</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="card">
+        <div class="label">盤一覧</div>
+        <select id="board-list" size="8"></select>
+      </div>
+      <div class="card">
+        <div class="row">
+          <button class="btn" id="edit">編集</button>
+          <button class="btn secondary" id="delete">削除</button>
+        </div>
+        <div id="msg" class="msg err"></div>
+      </div>
+    </section>
+
+    <section class="board-area">
+      <div class="board-wrap">
+        <div id="board" class="board"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./storage.js"></script>
+  <script>
+    const storage = window.BansyouStorage;
+    const listEl = document.getElementById("board-list");
+    const boardEl = document.getElementById("board");
+    const msgEl = document.getElementById("msg");
+    const editBtn = document.getElementById("edit");
+    const deleteBtn = document.getElementById("delete");
+
+    function renderBoard(data) {
+      if (!data) return;
+      const n = data.size;
+      const blockedSet = new Set((data.blocked || []).map((p) => `${p.x},${p.y}`));
+      boardEl.innerHTML = "";
+      boardEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${n}, 1fr)`;
+      for (let y = 0; y < n; y++) {
+        for (let x = 0; x < n; x++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const key = `${x},${y}`;
+          if (blockedSet.has(key)) cell.classList.add("blocked");
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function loadBoards() {
+      const boards = storage.listBoards();
+      listEl.innerHTML = "";
+      boards.forEach((b) => {
+        const opt = document.createElement("option");
+        opt.value = b.name;
+        opt.textContent = b.name;
+        listEl.appendChild(opt);
+      });
+      if (boards.length) {
+        listEl.value = boards[0].name;
+        renderBoard(boards[0]);
+      }
+    }
+
+    listEl.addEventListener("change", () => {
+      const data = storage.getBoard(listEl.value);
+      renderBoard(data);
+    });
+
+    editBtn.addEventListener("click", () => {
+      msgEl.textContent = "";
+      if (!listEl.value) {
+        msgEl.textContent = "盤を選択してください。";
+        return;
+      }
+      location.href = `./board-create.html?name=${encodeURIComponent(listEl.value)}`;
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      msgEl.textContent = "";
+      const name = listEl.value;
+      if (!name) {
+        msgEl.textContent = "盤を選択してください。";
+        return;
+      }
+      if (!confirm(`盤「${name}」を削除しますか？`)) return;
+      storage.deleteBoard(name);
+      loadBoards();
+    });
+
+    loadBoards();
+  </script>
+</body>
+</html>

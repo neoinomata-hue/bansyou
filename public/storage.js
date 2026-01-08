@@ -88,6 +88,7 @@
     getGame: (name) => getByName("games", name),
     saveGame: (game) => upsert("games", game),
     deleteGame: (name) => removeByName("games", name),
+    deleteBoard: (name) => removeByName("boards", name),
     resetAll
   };
 })();

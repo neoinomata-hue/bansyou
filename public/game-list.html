@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ゲーム一覧 - 盤匠</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="page">
+  <header class="topbar">
+    <button class="btn ghost" onclick="location.href='./index.html'">ホーム</button>
+    <div>
+      <div class="brand">ゲーム一覧</div>
+      <div class="subtitle">確認・編集・削除</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="card">
+        <div class="label">ゲーム一覧</div>
+        <select id="game-list" size="8"></select>
+      </div>
+      <div class="card">
+        <div class="row">
+          <button class="btn" id="edit">編集</button>
+          <button class="btn secondary" id="delete">削除</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <button class="btn secondary" id="play">プレイ</button>
+        </div>
+        <div id="msg" class="msg err"></div>
+      </div>
+    </section>
+
+    <section class="board-area">
+      <div class="board-wrap">
+        <div id="board" class="board"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./storage.js"></script>
+  <script>
+    const storage = window.BansyouStorage;
+    const listEl = document.getElementById("game-list");
+    const boardEl = document.getElementById("board");
+    const msgEl = document.getElementById("msg");
+    const editBtn = document.getElementById("edit");
+    const deleteBtn = document.getElementById("delete");
+    const playBtn = document.getElementById("play");
+
+    function renderGameBoard(game) {
+      if (!game) return;
+      const board = storage.getBoard(game.boardName);
+      if (!board) return;
+      const n = board.size;
+      const blockedSet = new Set((board.blocked || []).map((p) => `${p.x},${p.y}`));
+      const placed = new Map();
+      (game.placedPieces || []).forEach((p) => placed.set(`${p.x},${p.y}`, p));
+      boardEl.innerHTML = "";
+      boardEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${n}, 1fr)`;
+      for (let y = 0; y < n; y++) {
+        for (let x = 0; x < n; x++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const key = `${x},${y}`;
+          if (blockedSet.has(key)) cell.classList.add("blocked");
+          if (placed.has(key)) {
+            const info = placed.get(key);
+            const def = storage.getPiece(info.piece);
+            if (info.owner === 1) cell.classList.add("p1cell");
+            if (info.owner === 2) cell.classList.add("p2cell");
+            const span = document.createElement("span");
+            span.className = "piece";
+            span.textContent = def && def.char ? def.char : "駒";
+            cell.appendChild(span);
+          }
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function loadGames() {
+      const games = storage.listGames();
+      listEl.innerHTML = "";
+      games.forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g.name;
+        opt.textContent = g.name;
+        listEl.appendChild(opt);
+      });
+      if (games.length) {
+        listEl.value = games[0].name;
+        renderGameBoard(games[0]);
+      }
+    }
+
+    listEl.addEventListener("change", () => {
+      const data = storage.getGame(listEl.value);
+      renderGameBoard(data);
+    });
+
+    editBtn.addEventListener("click", () => {
+      msgEl.textContent = "";
+      if (!listEl.value) {
+        msgEl.textContent = "ゲームを選択してください。";
+        return;
+      }
+      location.href = `./game-setup.html?name=${encodeURIComponent(listEl.value)}`;
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      msgEl.textContent = "";
+      const name = listEl.value;
+      if (!name) {
+        msgEl.textContent = "ゲームを選択してください。";
+        return;
+      }
+      if (!confirm(`ゲーム「${name}」を削除しますか？`)) return;
+      storage.deleteGame(name);
+      loadGames();
+    });
+
+    playBtn.addEventListener("click", () => {
+      msgEl.textContent = "";
+      const name = listEl.value;
+      if (!name) {
+        msgEl.textContent = "ゲームを選択してください。";
+        return;
+      }
+      location.href = `./play.html?game=${encodeURIComponent(name)}`;
+    });
+
+    loadGames();
+  </script>
+</body>
+</html>

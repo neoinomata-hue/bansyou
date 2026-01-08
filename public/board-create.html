@@ -136,6 +136,28 @@
       }
     }
 
+    function applyLoadedBoard(data) {
+      if (!data) return;
+      nameEl.value = data.name || "";
+      size = data.size || 9;
+      initSizeOptions();
+      sizeEl.value = String(size);
+      blocked = new Set((data.blocked || []).map((p) => `${p.x},${p.y}`));
+      render();
+    }
+
+    function loadBoardForEdit() {
+      const url = new URL(location.href);
+      const name = url.searchParams.get("name");
+      if (!name) return;
+      const data = storage.getBoard(name);
+      if (!data) {
+        errEl.textContent = `盤が見つかりません: ${name}`;
+        return;
+      }
+      applyLoadedBoard(data);
+    }
+
     sizeEl.onchange = () => {
       size = Number(sizeEl.value);
       resetBoard();
@@ -165,6 +187,7 @@
     initSizeOptions();
     setMode("single");
     render();
+    loadBoardForEdit();
   </script>
 </body>
 </html>
