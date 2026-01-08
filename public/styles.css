@@ -1,0 +1,299 @@
+@import url("https://fonts.googleapis.com/css2?family=Shippori+Antique&family=Shippori+Mincho:wght@500;700&display=swap");
+
+:root {
+  color-scheme: light;
+  --ink: #2d2216;
+  --muted: #6b5a48;
+  --paper: #fbf6ea;
+  --paper-strong: #f3e7cf;
+  --accent: #c04b2b;
+  --accent-dark: #8f2f18;
+  --wood: #e4c788;
+  --wood-dark: #9b6a37;
+  --shadow: 0 12px 30px rgba(45, 34, 22, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.page {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Shippori Antique", "Yu Gothic", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.5), transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(255, 232, 197, 0.45), transparent 40%),
+    linear-gradient(145deg, #f7efe1, #efe3cf);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(45, 34, 22, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px);
+}
+
+.brand {
+  font-family: "Shippori Mincho", serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.layout {
+  display: flex;
+  gap: 18px;
+  padding: 18px;
+}
+
+.panel {
+  width: 320px;
+  background: var(--paper);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel.wide {
+  width: 360px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: inset 0 0 0 1px rgba(45, 34, 22, 0.08);
+}
+
+.label {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.msg {
+  font-size: 12px;
+  min-height: 16px;
+}
+
+.msg.ok {
+  color: #2e7d32;
+}
+
+.msg.err {
+  color: #b3261e;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(45, 34, 22, 0.2);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  box-shadow: 0 10px 18px rgba(192, 75, 43, 0.25);
+}
+
+.btn.secondary {
+  background: linear-gradient(135deg, #5c6b73, #2f3a42);
+  box-shadow: 0 10px 18px rgba(47, 58, 66, 0.2);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--accent-dark);
+  border: 1px solid rgba(192, 75, 43, 0.35);
+  box-shadow: none;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.row > * {
+  flex: 1;
+}
+
+.board-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-wrap {
+  width: min(86vmin, 88vh);
+  height: min(86vmin, 88vh);
+  background: var(--wood);
+  border: 3px solid var(--wood-dark);
+  border-radius: 12px;
+  box-shadow: 0 18px 25px rgba(45, 34, 22, 0.2);
+  overflow: hidden;
+}
+
+.board {
+  width: 100%;
+  height: 100%;
+  display: grid;
+}
+
+.cell {
+  border: 1px solid rgba(90, 60, 28, 0.25);
+  background: #f9edcc;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--ink);
+  user-select: none;
+  cursor: pointer;
+}
+
+.cell.center {
+  background: #f3d59a;
+  cursor: default;
+}
+
+.cell.step {
+  background: rgba(192, 75, 43, 0.25);
+}
+
+.cell.slide {
+  background: rgba(33, 94, 140, 0.25);
+}
+
+.cell.blocked {
+  background: #2c2a29;
+  cursor: not-allowed;
+}
+
+.cell.p1cell {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.cell.p2cell {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.piece {
+  pointer-events: none;
+  font-size: clamp(12px, 2.4vmin, 22px);
+}
+
+.cell.selected {
+  outline: 3px solid rgba(192, 75, 43, 0.8);
+  outline-offset: -3px;
+}
+
+.cell.movable-p1 {
+  outline: 3px solid rgba(33, 33, 33, 0.55);
+  outline-offset: -3px;
+}
+
+.cell.movable-p2 {
+  outline: 3px solid rgba(255, 255, 255, 0.9);
+  outline-offset: -3px;
+}
+
+.hero {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 18px 30px;
+  text-align: center;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-family: "Shippori Mincho", serif;
+  font-size: clamp(28px, 6vw, 48px);
+}
+
+.hero p {
+  margin: 0 auto 20px;
+  max-width: 540px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 18px 40px;
+}
+
+.tile {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: left;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 160px;
+}
+
+.tile h3 {
+  margin: 0;
+  font-family: "Shippori Mincho", serif;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .panel,
+  .panel.wide {
+    width: 100%;
+  }
+
+  .board-wrap {
+    width: min(92vmin, 86vh);
+    height: min(92vmin, 86vh);
+  }
+}

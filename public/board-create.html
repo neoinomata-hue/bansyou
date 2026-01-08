@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>盤作成 - 盤匠</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="page">
+  <header class="topbar">
+    <button class="btn ghost" onclick="location.href='./index.html'">ホーム</button>
+    <div>
+      <div class="brand">盤作成</div>
+      <div class="subtitle">盤面と通行不可マスを設定します</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="card">
+        <div class="label">盤のサイズ（9〜27 / 奇数）</div>
+        <select id="size"></select>
+        <div class="note">サイズ変更で通行不可マスはリセットされます。</div>
+      </div>
+
+      <div class="card">
+        <div class="label">クリック方法</div>
+        <div class="row">
+          <button class="btn" id="mode-single">単体</button>
+          <button class="btn secondary" id="mode-sym-h">左右対称</button>
+          <button class="btn secondary" id="mode-sym-v">上下対称</button>
+        </div>
+        <div class="note">黒マスは駒を置けません。対称指定では対応マスも同時に黒くします。</div>
+      </div>
+
+      <div class="card">
+        <div class="label">盤の名前（キー）</div>
+        <input id="board-name" placeholder="例: my_board">
+        <div class="note">同じ名前があれば上書きします。</div>
+      </div>
+
+      <div class="card">
+        <button class="btn" id="save">保存（ローカル保存）</button>
+        <div id="ok" class="msg ok"></div>
+        <div id="err" class="msg err"></div>
+      </div>
+    </section>
+
+    <section class="board-area">
+      <div class="board-wrap">
+        <div id="board" class="board"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./storage.js"></script>
+  <script>
+    const sizeEl = document.getElementById("size");
+    const boardEl = document.getElementById("board");
+    const nameEl = document.getElementById("board-name");
+    const btnSingle = document.getElementById("mode-single");
+    const btnSymH = document.getElementById("mode-sym-h");
+    const btnSymV = document.getElementById("mode-sym-v");
+    const saveBtn = document.getElementById("save");
+    const okEl = document.getElementById("ok");
+    const errEl = document.getElementById("err");
+    const storage = window.BansyouStorage;
+
+    let size = 9;
+    let mode = "single";
+    let blocked = new Set();
+
+    function sanitizeKey(s) {
+      return String(s || "").trim().replace(/[\\/:*?"<>|]/g, "_");
+    }
+
+    function initSizeOptions() {
+      sizeEl.innerHTML = "";
+      for (let n = 9; n <= 27; n += 2) {
+        const opt = document.createElement("option");
+        opt.value = n;
+        opt.textContent = `${n} x ${n}`;
+        if (n === size) opt.selected = true;
+        sizeEl.appendChild(opt);
+      }
+    }
+
+    function setMode(m) {
+      mode = m;
+      btnSingle.classList.toggle("secondary", m !== "single");
+      btnSymH.classList.toggle("secondary", m !== "sym-h");
+      btnSymV.classList.toggle("secondary", m !== "sym-v");
+    }
+
+    function resetBoard() {
+      blocked = new Set();
+      render();
+    }
+
+    function toggleCell(x, y) {
+      const key = `${x},${y}`;
+      if (blocked.has(key)) blocked.delete(key);
+      else blocked.add(key);
+    }
+
+    function toggleWithMode(x, y) {
+      toggleCell(x, y);
+      if (mode === "sym-h") {
+        const mx = size - 1 - x;
+        toggleCell(mx, y);
+      }
+      if (mode === "sym-v") {
+        const my = size - 1 - y;
+        toggleCell(x, my);
+      }
+    }
+
+    function render() {
+      okEl.textContent = "";
+      errEl.textContent = "";
+      boardEl.innerHTML = "";
+      boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const key = `${x},${y}`;
+          if (blocked.has(key)) cell.classList.add("blocked");
+          cell.onclick = () => {
+            toggleWithMode(x, y);
+            render();
+          };
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    sizeEl.onchange = () => {
+      size = Number(sizeEl.value);
+      resetBoard();
+    };
+
+    btnSingle.onclick = () => setMode("single");
+    btnSymH.onclick = () => setMode("sym-h");
+    btnSymV.onclick = () => setMode("sym-v");
+
+    saveBtn.onclick = () => {
+      okEl.textContent = "";
+      errEl.textContent = "";
+      const key = sanitizeKey(nameEl.value);
+      if (!key) {
+        errEl.textContent = "盤の名前を入力してください。";
+        return;
+      }
+      const blockedArr = Array.from(blocked).map((k) => {
+        const [x, y] = k.split(",").map(Number);
+        return { x, y };
+      });
+      const data = { type: "board", name: key, size, blocked: blockedArr };
+      storage.saveBoard(data);
+      okEl.textContent = `保存しました: ${key}`;
+    };
+
+    initSizeOptions();
+    setMode("single");
+    render();
+  </script>
+</body>
+</html>

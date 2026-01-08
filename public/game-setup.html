@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ゲーム設定 - 盤匠</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="page">
+  <header class="topbar">
+    <button class="btn ghost" onclick="location.href='./index.html'">ホーム</button>
+    <div>
+      <div class="brand">ゲーム設定</div>
+      <div class="subtitle">初期配置と持ち駒ルール</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="card">
+        <div class="label">盤を選択</div>
+        <select id="board-list"></select>
+        <div class="note">保存済みの盤から選びます。</div>
+      </div>
+
+      <div class="card">
+        <div class="label">駒を選択</div>
+        <select id="piece-list"></select>
+        <div class="note">右の盤をクリックして配置します。</div>
+      </div>
+
+      <div class="card">
+        <div class="label">配置する陣営</div>
+        <div class="row">
+          <button class="btn" id="btn-p1">1P</button>
+          <button class="btn secondary" id="btn-p2">2P</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">ゲーム名</div>
+        <input id="game-name" placeholder="例: my_game">
+      </div>
+
+      <div class="card">
+        <div class="label">持ち駒ルール</div>
+        <label class="note">
+          <input type="checkbox" id="drops-enabled" checked>
+          持ち駒を使う
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <button class="btn" id="save">保存</button>
+          <button class="btn secondary" id="play">プレイ</button>
+        </div>
+        <div id="ok" class="msg ok"></div>
+        <div id="err" class="msg err"></div>
+      </div>
+    </section>
+
+    <section class="board-area">
+      <div class="board-wrap">
+        <div id="board" class="board"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./storage.js"></script>
+  <script>
+    const boardListEl = document.getElementById("board-list");
+    const pieceListEl = document.getElementById("piece-list");
+    const boardEl = document.getElementById("board");
+    const gameNameEl = document.getElementById("game-name");
+    const dropsEnabledEl = document.getElementById("drops-enabled");
+    const saveBtn = document.getElementById("save");
+    const playBtn = document.getElementById("play");
+    const okEl = document.getElementById("ok");
+    const errEl = document.getElementById("err");
+    const btnP1 = document.getElementById("btn-p1");
+    const btnP2 = document.getElementById("btn-p2");
+    const storage = window.BansyouStorage;
+
+    const url = new URL(location.href);
+    const editGameName = url.searchParams.get("name");
+    let currentOwner = 1;
+    let boardData = null;
+    const placements = new Map();
+    let loadedGameData = null;
+
+    function setOwner(owner) {
+      currentOwner = owner;
+      btnP1.classList.toggle("secondary", owner !== 1);
+      btnP2.classList.toggle("secondary", owner !== 2);
+    }
+
+    function pieceCharOf(pieceKey) {
+      const opt = Array.from(pieceListEl.options).find((o) => o.value === pieceKey);
+      if (opt && opt.dataset.char) return opt.dataset.char;
+      return "駒";
+    }
+
+    function loadPieces() {
+      const list = storage.listPieces();
+      pieceListEl.innerHTML = "";
+      if (list.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "保存された駒がありません";
+        pieceListEl.appendChild(opt);
+        pieceListEl.disabled = true;
+        return;
+      }
+      list.forEach((p) => {
+        const opt = document.createElement("option");
+        opt.value = p.name;
+        opt.textContent = p.name;
+        opt.dataset.char = p.char || "駒";
+        pieceListEl.appendChild(opt);
+      });
+      pieceListEl.disabled = false;
+    }
+
+    function loadBoards() {
+      const boards = storage.listBoards();
+      boardListEl.innerHTML = "";
+      if (boards.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "盤がありません";
+        boardListEl.appendChild(opt);
+        saveBtn.disabled = true;
+        playBtn.disabled = true;
+        return;
+      }
+      boards.forEach((b) => {
+        const opt = document.createElement("option");
+        opt.value = b.name;
+        opt.textContent = b.name;
+        boardListEl.appendChild(opt);
+      });
+      saveBtn.disabled = false;
+      playBtn.disabled = false;
+
+      if (loadedGameData && loadedGameData.boardName) {
+        boardListEl.value = loadedGameData.boardName;
+      } else if (url.searchParams.get("board")) {
+        boardListEl.value = url.searchParams.get("board");
+      }
+      boardData = storage.getBoard(boardListEl.value);
+      if (loadedGameData) applyPlacementsFromGame(loadedGameData);
+      renderBoard();
+    }
+
+    function applyPlacementsFromGame(game) {
+      placements.clear();
+      (game.placedPieces || []).forEach((p) => {
+        placements.set(`${p.x},${p.y}`, { piece: p.piece, owner: p.owner ?? 1 });
+      });
+    }
+
+    function loadGameForEdit() {
+      if (!editGameName) return;
+      const data = storage.getGame(editGameName);
+      if (!data) {
+        errEl.textContent = `ゲームが見つかりません: ${editGameName}`;
+        return;
+      }
+      loadedGameData = data;
+      gameNameEl.value = data.name || "";
+      dropsEnabledEl.checked = data.rules?.drops?.enabled ?? true;
+      okEl.textContent = `編集モード: ${editGameName}`;
+    }
+
+    function renderBoard() {
+      okEl.textContent = "";
+      errEl.textContent = "";
+      if (!boardData) return;
+      const n = boardData.size;
+      const blockedSet = new Set((boardData.blocked || []).map((p) => `${p.x},${p.y}`));
+      boardEl.innerHTML = "";
+      boardEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${n}, 1fr)`;
+      for (let y = 0; y < n; y++) {
+        for (let x = 0; x < n; x++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const key = `${x},${y}`;
+          if (blockedSet.has(key)) {
+            cell.classList.add("blocked");
+          } else {
+            cell.onclick = () => {
+              const sel = pieceListEl.value;
+              if (!sel) return;
+              if (placements.has(key)) {
+                placements.delete(key);
+              } else {
+                placements.set(key, { piece: sel, owner: currentOwner });
+              }
+              renderBoard();
+            };
+          }
+          if (placements.has(key)) {
+            const info = placements.get(key);
+            if (info.owner === 1) cell.classList.add("p1cell");
+            if (info.owner === 2) cell.classList.add("p2cell");
+            const span = document.createElement("span");
+            span.className = "piece";
+            span.textContent = pieceCharOf(info.piece);
+            cell.appendChild(span);
+          }
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function buildGameData(gameName) {
+      const placed = [];
+      for (const [key, info] of placements.entries()) {
+        const [x, y] = key.split(",").map(Number);
+        placed.push({ x, y, piece: info.piece, owner: info.owner });
+      }
+      return {
+        type: "game",
+        name: gameName,
+        boardName: boardListEl.value,
+        placedPieces: placed,
+        rules: {
+          actionsPerTurn: 1,
+          drops: {
+            enabled: dropsEnabledEl.checked,
+            allowFusionDrop: false,
+            dropZones: []
+          }
+        }
+      };
+    }
+
+    function saveGame(redirectToPlay) {
+      okEl.textContent = "";
+      errEl.textContent = "";
+      const gname = (gameNameEl.value || "").trim();
+      if (!gname) {
+        errEl.textContent = "ゲーム名を入力してください。";
+        return;
+      }
+      const data = buildGameData(gname);
+      storage.saveGame(data);
+      okEl.textContent = `保存しました: ${gname}`;
+      if (redirectToPlay) {
+        location.href = `./play.html?game=${encodeURIComponent(gname)}`;
+      }
+    }
+
+    boardListEl.addEventListener("change", () => {
+      boardData = storage.getBoard(boardListEl.value);
+      placements.clear();
+      renderBoard();
+    });
+
+    btnP1.onclick = () => setOwner(1);
+    btnP2.onclick = () => setOwner(2);
+    saveBtn.onclick = () => saveGame(false);
+    playBtn.onclick = () => saveGame(true);
+
+    loadGameForEdit();
+    loadPieces();
+    loadBoards();
+    setOwner(1);
+  </script>
+</body>
+</html>

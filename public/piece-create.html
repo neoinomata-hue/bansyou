@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>駒作成 - 盤匠</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="page">
+  <header class="topbar">
+    <button class="btn ghost" onclick="location.href='./index.html'">ホーム</button>
+    <div>
+      <div class="brand">駒作成</div>
+      <div class="subtitle">動きのパターンを登録します</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel wide">
+      <div class="card">
+        <div class="label">駒の名前（キー）</div>
+        <input id="piece-name" placeholder="例: 歩">
+      </div>
+      <div class="card">
+        <div class="label">表示文字（1文字）</div>
+        <input id="piece-char" maxlength="1" placeholder="例: 歩">
+        <div class="note">未入力の場合は名前の先頭1文字を使います。</div>
+      </div>
+      <div class="card">
+        <div class="label">盤の大きさ（奇数）</div>
+        <select id="board-size"></select>
+      </div>
+      <div class="card">
+        <div class="label">クリックの追加先</div>
+        <div class="row">
+          <button class="btn" id="mode-step">1マス移動</button>
+          <button class="btn secondary" id="mode-slide">直線移動</button>
+        </div>
+        <div class="note">中心マスは駒の位置です。選択済みマスは再クリックで解除します。</div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <button class="btn" id="save">保存</button>
+          <button class="btn ghost" id="clear">選択をクリア</button>
+        </div>
+        <div id="ok" class="msg ok"></div>
+        <div id="err" class="msg err"></div>
+      </div>
+    </section>
+
+    <section class="board-area">
+      <div class="board-wrap">
+        <div id="board" class="board"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./storage.js"></script>
+  <script>
+    const nameEl = document.getElementById("piece-name");
+    const charEl = document.getElementById("piece-char");
+    const sizeEl = document.getElementById("board-size");
+    const modeStepBtn = document.getElementById("mode-step");
+    const modeSlideBtn = document.getElementById("mode-slide");
+    const saveBtn = document.getElementById("save");
+    const clearBtn = document.getElementById("clear");
+    const boardEl = document.getElementById("board");
+    const okEl = document.getElementById("ok");
+    const errEl = document.getElementById("err");
+    const storage = window.BansyouStorage;
+
+    let size = 9;
+    let mode = "step";
+    let normal = new Set();
+    let cont = new Set();
+
+    function sanitizeKey(s) {
+      return String(s || "").trim().replace(/[\\/:*?"<>|]/g, "_");
+    }
+
+    function initSizeOptions() {
+      sizeEl.innerHTML = "";
+      for (let n = 9; n <= 27; n += 2) {
+        const opt = document.createElement("option");
+        opt.value = n;
+        opt.textContent = `${n} x ${n}`;
+        if (n === size) opt.selected = true;
+        sizeEl.appendChild(opt);
+      }
+    }
+
+    function setMode(m) {
+      mode = m;
+      modeStepBtn.classList.toggle("secondary", m !== "step");
+      modeSlideBtn.classList.toggle("secondary", m !== "slide");
+    }
+
+    function toggleCell(set, key) {
+      if (set.has(key)) set.delete(key);
+      else set.add(key);
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = "";
+      boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+      const center = Math.floor(size / 2);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const key = `${x},${y}`;
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          if (x === center && y === center) {
+            cell.classList.add("center");
+          } else {
+            if (normal.has(key)) cell.classList.add("step");
+            if (cont.has(key)) cell.classList.add("slide");
+            cell.onclick = () => {
+              if (mode === "step") toggleCell(normal, key);
+              else toggleCell(cont, key);
+              renderBoard();
+            };
+          }
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function buildPieceData() {
+      const rawName = sanitizeKey(nameEl.value);
+      if (!rawName) throw new Error("駒の名前を入力してください。");
+      const ch = (charEl.value || rawName).trim().slice(0, 1) || "駒";
+      const center = Math.floor(size / 2);
+      return {
+        type: "piece",
+        name: rawName,
+        char: ch,
+        boardSize: size,
+        center: { x: center, y: center },
+        stride: (size - 1) / 2,
+        moves: {
+          normal: Array.from(normal).map((k) => {
+            const [x, y] = k.split(",").map(Number);
+            return { x, y };
+          }),
+          cont: Array.from(cont).map((k) => {
+            const [x, y] = k.split(",").map(Number);
+            return { x, y };
+          })
+        },
+        effects: [],
+        fusion: null
+      };
+    }
+
+    function applyLoadedPiece(data) {
+      size = data.boardSize || 9;
+      initSizeOptions();
+      sizeEl.value = String(size);
+      nameEl.value = data.name || "";
+      charEl.value = data.char || "";
+      normal = new Set((data.moves?.normal || []).map((p) => `${p.x},${p.y}`));
+      cont = new Set((data.moves?.cont || []).map((p) => `${p.x},${p.y}`));
+      renderBoard();
+    }
+
+    function loadPieceForEdit() {
+      const url = new URL(location.href);
+      const name = url.searchParams.get("name");
+      if (!name) return;
+      const data = storage.getPiece(name);
+      if (!data) {
+        errEl.textContent = `駒が見つかりません: ${name}`;
+        return;
+      }
+      applyLoadedPiece(data);
+    }
+
+    sizeEl.onchange = () => {
+      size = Number(sizeEl.value);
+      normal.clear();
+      cont.clear();
+      renderBoard();
+    };
+
+    modeStepBtn.onclick = () => setMode("step");
+    modeSlideBtn.onclick = () => setMode("slide");
+    clearBtn.onclick = () => {
+      normal.clear();
+      cont.clear();
+      renderBoard();
+    };
+
+    saveBtn.onclick = () => {
+      okEl.textContent = "";
+      errEl.textContent = "";
+      try {
+        const data = buildPieceData();
+        storage.savePiece(data);
+        okEl.textContent = `保存しました: ${data.name}`;
+      } catch (e) {
+        errEl.textContent = e.message;
+      }
+    };
+
+    initSizeOptions();
+    setMode("step");
+    renderBoard();
+    loadPieceForEdit();
+  </script>
+</body>
+</html>

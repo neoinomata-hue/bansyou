@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>プレイ - 盤匠</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="page">
+  <header class="topbar">
+    <button class="btn ghost" onclick="location.href='./index.html'">ホーム</button>
+    <button class="btn secondary" onclick="location.href='./game-setup.html'">戻る</button>
+    <div>
+      <div class="brand">プレイ</div>
+      <div class="subtitle" id="status">準備中...</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="board-area">
+      <div class="board-wrap">
+        <div id="board" class="board"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./storage.js"></script>
+  <script>
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    const storage = window.BansyouStorage;
+
+    let gameData = null;
+    let boardData = null;
+    let pieceDefs = new Map();
+    let pieces = new Map();
+    let selected = null;
+    let movable = new Set();
+
+    function queryGameName() {
+      const url = new URL(location.href);
+      return url.searchParams.get("game") || "";
+    }
+
+    function loadGame() {
+      const gname = queryGameName();
+      if (!gname) throw new Error("URL に ?game=ゲーム名 を指定してください。");
+      const data = storage.getGame(gname);
+      if (!data) throw new Error(`ゲームが見つかりません: ${gname}`);
+      gameData = data;
+      statusEl.textContent = `読み込み: ${gname}`;
+    }
+
+    function loadBoard() {
+      const data = storage.getBoard(gameData.boardName);
+      if (!data) throw new Error(`盤が見つかりません: ${gameData.boardName}`);
+      boardData = data;
+    }
+
+    function loadPiecesDefs() {
+      const all = storage.listPieces();
+      pieceDefs = new Map(all.map((p) => [p.name, p]));
+    }
+
+    function loadPiecesFromGame() {
+      pieces = new Map();
+      (gameData.placedPieces || []).forEach((p) => {
+        const owner = p.owner ?? 1;
+        pieces.set(`${p.x},${p.y}`, { piece: p.piece, owner });
+      });
+    }
+
+    function pieceDef(key) {
+      return pieceDefs.get(key) || null;
+    }
+
+    function pieceChar(key) {
+      const d = pieceDef(key);
+      return d && d.char ? d.char : "駒";
+    }
+
+    function blockedSet() {
+      return new Set((boardData.blocked || []).map((p) => `${p.x},${p.y}`));
+    }
+
+    function inBoard(x, y) {
+      return 0 <= x && x < boardData.size && 0 <= y && y < boardData.size;
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.get(`${x},${y}`) || null;
+    }
+
+    function computeMoves(px, py, pieceKey, owner) {
+      const def = pieceDef(pieceKey);
+      if (!def) return [];
+      const bset = blockedSet();
+      const c = def.center;
+      const stride = def.stride || (def.boardSize ? (def.boardSize - 1) / 2 : 4);
+      const normals = (def.moves?.normal || []).map((p) => ({ dx: p.x - c.x, dy: p.y - c.y }));
+      const conts = (def.moves?.cont || []).map((p) => ({ dx: p.x - c.x, dy: p.y - c.y }));
+      const sign = owner === 2 ? -1 : 1;
+      const out = [];
+
+      for (const v0 of normals) {
+        const dx = v0.dx * sign;
+        const dy = v0.dy * sign;
+        if (dx === 0 && dy === 0) continue;
+        const tx = px + dx;
+        const ty = py + dy;
+        const key = `${tx},${ty}`;
+        if (!inBoard(tx, ty) || bset.has(key)) continue;
+        const there = getPieceAt(tx, ty);
+        if (there && there.owner === owner) continue;
+        out.push({ x: tx, y: ty });
+      }
+
+      for (const v0 of conts) {
+        const dx = v0.dx * sign;
+        const dy = v0.dy * sign;
+        if (dx === 0 && dy === 0) continue;
+        for (let k = 0; ; k++) {
+          const m = 1 + stride * k;
+          const tx = px + dx * m;
+          const ty = py + dy * m;
+          const key = `${tx},${ty}`;
+          if (!inBoard(tx, ty) || bset.has(key)) break;
+          const there = getPieceAt(tx, ty);
+          if (there) {
+            if (there.owner !== owner) out.push({ x: tx, y: ty });
+            break;
+          }
+          out.push({ x: tx, y: ty });
+        }
+      }
+      return out;
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll(".cell").forEach((c) => {
+        c.classList.remove("selected", "movable-p1", "movable-p2");
+      });
+      movable.clear();
+    }
+
+    function render() {
+      clearHighlights();
+      const n = boardData.size;
+      const bset = blockedSet();
+      boardEl.innerHTML = "";
+      boardEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${n}, 1fr)`;
+      for (let y = 0; y < n; y++) {
+        for (let x = 0; x < n; x++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.dataset.x = x;
+          cell.dataset.y = y;
+          const key = `${x},${y}`;
+          if (bset.has(key)) cell.classList.add("blocked");
+          if (pieces.has(key)) {
+            const info = pieces.get(key);
+            if (info.owner === 1) cell.classList.add("p1cell");
+            if (info.owner === 2) cell.classList.add("p2cell");
+            const span = document.createElement("span");
+            span.className = "piece";
+            span.textContent = pieceChar(info.piece);
+            cell.appendChild(span);
+          }
+          cell.onclick = () => {
+            if (bset.has(key)) return;
+            if (selected && movable.has(key)) {
+              const fromKey = `${selected.x},${selected.y}`;
+              pieces.delete(fromKey);
+              pieces.set(key, { piece: selected.piece, owner: selected.owner });
+              selected = null;
+              movable.clear();
+              render();
+              return;
+            }
+            if (pieces.has(key)) {
+              const info = pieces.get(key);
+              selected = { x, y, piece: info.piece, owner: info.owner };
+              render();
+              const moves = computeMoves(x, y, selected.piece, selected.owner);
+              movable = new Set(moves.map((m) => `${m.x},${m.y}`));
+              const selCell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+              if (selCell) selCell.classList.add("selected");
+              const cls = selected.owner === 1 ? "movable-p1" : "movable-p2";
+              for (const mk of movable) {
+                const [mx, my] = mk.split(",").map(Number);
+                const c2 = document.querySelector(`.cell[data-x="${mx}"][data-y="${my}"]`);
+                if (c2) c2.classList.add(cls);
+              }
+              return;
+            }
+            selected = null;
+            movable.clear();
+            render();
+          };
+          boardEl.appendChild(cell);
+        }
+      }
+      if (selected) {
+        const selCell = document.querySelector(`.cell[data-x="${selected.x}"][data-y="${selected.y}"]`);
+        if (selCell) selCell.classList.add("selected");
+        const moves = computeMoves(selected.x, selected.y, selected.piece, selected.owner);
+        movable = new Set(moves.map((m) => `${m.x},${m.y}`));
+        const cls = selected.owner === 1 ? "movable-p1" : "movable-p2";
+        for (const mk of movable) {
+          const [mx, my] = mk.split(",").map(Number);
+          const c2 = document.querySelector(`.cell[data-x="${mx}"][data-y="${my}"]`);
+          if (c2) c2.classList.add(cls);
+        }
+      }
+    }
+
+    (function init() {
+      try {
+        loadGame();
+        loadBoard();
+        loadPiecesDefs();
+        loadPiecesFromGame();
+        render();
+      } catch (e) {
+        statusEl.textContent = `エラー: ${e.message}`;
+      }
+    })();
+  </script>
+</body>
+</html>

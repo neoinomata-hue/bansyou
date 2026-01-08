@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>盤匠 - bansyou</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="page">
+  <header class="topbar">
+    <div>
+      <div class="brand">盤匠</div>
+      <div class="subtitle">盤と駒を設計して遊ぶ</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>自分だけの盤面と駒で遊ぶ</h1>
+      <p>
+        盤を作成し、駒の動きを設計して、ゲームの初期配置とルールをまとめます。
+        保存データはブラウザ内（ローカルストレージ）に保持されます。
+      </p>
+      <a class="btn" href="./game-setup.html">ゲームを作成する</a>
+    </section>
+
+    <section class="grid">
+      <article class="tile">
+        <h3>盤を作成</h3>
+        <p>マス数と通行不可マスを設定して、盤の土台を作ります。</p>
+        <a class="btn secondary" href="./board-create.html">盤作成へ</a>
+      </article>
+      <article class="tile">
+        <h3>駒を作成</h3>
+        <p>動き方を配置して、独自の駒セットを用意します。</p>
+        <a class="btn secondary" href="./piece-create.html">駒作成へ</a>
+      </article>
+      <article class="tile">
+        <h3>ゲームを設定</h3>
+        <p>盤と駒を配置し、持ち駒ルールを設定して保存します。</p>
+        <a class="btn secondary" href="./game-setup.html">設定へ</a>
+      </article>
+      <article class="tile">
+        <h3>プレイ</h3>
+        <p>保存したゲームを選んで盤上で動かして確認します。</p>
+        <a class="btn secondary" href="./play.html">プレイへ</a>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
