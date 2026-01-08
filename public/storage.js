@@ -18,6 +18,231 @@
         effects: [],
         fusion: null
       }
+      ,
+      {
+        type: "piece",
+        name: "玉",
+        char: "玉",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 4,
+        moves: {
+          normal: [
+            { x: 3, y: 3 }, { x: 4, y: 3 }, { x: 5, y: 3 },
+            { x: 3, y: 4 }, { x: 5, y: 4 },
+            { x: 3, y: 5 }, { x: 4, y: 5 }, { x: 5, y: 5 }
+          ],
+          cont: []
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "金",
+        char: "金",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 4,
+        moves: {
+          normal: [
+            { x: 3, y: 3 }, { x: 4, y: 3 }, { x: 5, y: 3 },
+            { x: 3, y: 4 }, { x: 5, y: 4 },
+            { x: 4, y: 5 }
+          ],
+          cont: []
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "銀",
+        char: "銀",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 4,
+        moves: {
+          normal: [
+            { x: 3, y: 3 }, { x: 4, y: 3 }, { x: 5, y: 3 },
+            { x: 3, y: 5 }, { x: 5, y: 5 }
+          ],
+          cont: []
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "桂",
+        char: "桂",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 4,
+        moves: {
+          normal: [
+            { x: 3, y: 2 }, { x: 5, y: 2 }
+          ],
+          cont: []
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "香",
+        char: "香",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 1,
+        moves: {
+          normal: [],
+          cont: [{ x: 4, y: 3 }]
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "角",
+        char: "角",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 1,
+        moves: {
+          normal: [],
+          cont: [
+            { x: 3, y: 3 }, { x: 5, y: 3 },
+            { x: 3, y: 5 }, { x: 5, y: 5 }
+          ]
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "飛",
+        char: "飛",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 1,
+        moves: {
+          normal: [],
+          cont: [
+            { x: 4, y: 3 }, { x: 4, y: 5 },
+            { x: 3, y: 4 }, { x: 5, y: 4 }
+          ]
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "チェス_キング",
+        char: "K",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 4,
+        moves: {
+          normal: [
+            { x: 3, y: 3 }, { x: 4, y: 3 }, { x: 5, y: 3 },
+            { x: 3, y: 4 }, { x: 5, y: 4 },
+            { x: 3, y: 5 }, { x: 4, y: 5 }, { x: 5, y: 5 }
+          ],
+          cont: []
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "チェス_クイーン",
+        char: "Q",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 1,
+        moves: {
+          normal: [],
+          cont: [
+            { x: 4, y: 3 }, { x: 4, y: 5 },
+            { x: 3, y: 4 }, { x: 5, y: 4 },
+            { x: 3, y: 3 }, { x: 5, y: 3 },
+            { x: 3, y: 5 }, { x: 5, y: 5 }
+          ]
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "チェス_ルーク",
+        char: "R",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 1,
+        moves: {
+          normal: [],
+          cont: [
+            { x: 4, y: 3 }, { x: 4, y: 5 },
+            { x: 3, y: 4 }, { x: 5, y: 4 }
+          ]
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "チェス_ビショップ",
+        char: "B",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 1,
+        moves: {
+          normal: [],
+          cont: [
+            { x: 3, y: 3 }, { x: 5, y: 3 },
+            { x: 3, y: 5 }, { x: 5, y: 5 }
+          ]
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "チェス_ナイト",
+        char: "N",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 4,
+        moves: {
+          normal: [
+            { x: 3, y: 2 }, { x: 5, y: 2 },
+            { x: 2, y: 3 }, { x: 6, y: 3 },
+            { x: 2, y: 5 }, { x: 6, y: 5 },
+            { x: 3, y: 6 }, { x: 5, y: 6 }
+          ],
+          cont: []
+        },
+        effects: [],
+        fusion: null
+      },
+      {
+        type: "piece",
+        name: "チェス_ポーン",
+        char: "P",
+        boardSize: 9,
+        center: { x: 4, y: 4 },
+        stride: 4,
+        moves: {
+          normal: [
+            { x: 4, y: 3 },
+            { x: 3, y: 3 }, { x: 5, y: 3 }
+          ],
+          cont: []
+        },
+        effects: [],
+        fusion: null
+      }
     ],
     games: []
   };
