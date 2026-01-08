@@ -349,7 +349,8 @@ select {
   width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  justify-content: space-between;
+  min-height: min(86vmin, 88vh);
 }
 
 .hand.panel {
@@ -359,6 +360,14 @@ select {
   left: auto;
   top: auto;
   bottom: auto;
+}
+
+.hand.panel.p1 {
+  align-self: flex-end;
+}
+
+.hand.panel.p2 {
+  align-self: flex-start;
 }
 
 .tile {
@@ -403,5 +412,6 @@ select {
 
   .side-hands {
     width: 100%;
+    min-height: auto;
   }
 }
