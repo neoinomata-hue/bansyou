@@ -342,7 +342,11 @@ select {
 }
 
 .play-layout {
-  align-items: stretch;
+  align-items: flex-start;
+}
+
+.play-layout .board-area {
+  align-items: flex-start;
 }
 
 .side-hands {
@@ -350,7 +354,7 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: min(86vmin, 88vh);
+  height: min(86vmin, 88vh);
 }
 
 .hand.panel {
@@ -412,6 +416,6 @@ select {
 
   .side-hands {
     width: 100%;
-    min-height: auto;
+    height: auto;
   }
 }
