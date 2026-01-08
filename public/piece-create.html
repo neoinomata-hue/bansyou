@@ -105,6 +105,7 @@
       boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
       boardEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
       const center = Math.floor(size / 2);
+      const ch = (charEl.value || nameEl.value || "駒").trim().slice(0, 1) || "駒";
       for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {
           const key = `${x},${y}`;
@@ -112,6 +113,7 @@
           cell.className = "cell";
           if (x === center && y === center) {
             cell.classList.add("center");
+            cell.textContent = ch;
           } else {
             if (normal.has(key)) cell.classList.add("step");
             if (cont.has(key)) cell.classList.add("slide");
@@ -182,6 +184,9 @@
       cont.clear();
       renderBoard();
     };
+
+    charEl.addEventListener("input", renderBoard);
+    nameEl.addEventListener("input", renderBoard);
 
     modeStepBtn.onclick = () => setMode("step");
     modeSlideBtn.onclick = () => setMode("slide");

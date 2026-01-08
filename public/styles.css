@@ -354,6 +354,8 @@ select {
 
 .side-hands {
   width: 220px;
+  min-width: 220px;
+  flex: 0 0 220px;
   display: flex;
   flex-direction: column;
   height: min(86vmin, 88vh);
