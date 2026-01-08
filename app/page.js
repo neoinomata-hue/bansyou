@@ -37,7 +37,12 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="grid">
+        <section className="home-intro">
+          <div className="home-title">磐匠</div>
+          <div className="home-subtitle">盤と駒を自由に設計して遊ぶことができます。</div>
+        </section>
+
+        <section className="grid home-grid">
           <div className="card">
             <div className="label">盤作成</div>
             <div className="note">マス数と通行不可マスを設定して、盤の土台を作ります。</div>
@@ -68,7 +73,7 @@ export default function Home() {
             <div className="note">作成したゲームを確認・編集・削除します。</div>
             <a className="btn secondary" href="/game-list.html">ゲーム一覧</a>
           </div>
-          <div className="card">
+          <div className="card center-row">
             <div className="label">作成したゲームをプレイする</div>
             <div className="note">保存済みゲームを選び、盤上で動かして確認します。</div>
             <div className="row">

@@ -316,6 +316,51 @@ select {
   padding: 0 18px 40px;
 }
 
+.home-intro {
+  text-align: center;
+  padding: 30px 18px 10px;
+}
+
+.home-title {
+  font-family: "Shippori Mincho", serif;
+  font-weight: 700;
+  font-size: clamp(26px, 5vw, 40px);
+}
+
+.home-subtitle {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.home-grid {
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+}
+
+.center-row {
+  grid-column: 2;
+}
+
+.play-layout {
+  align-items: stretch;
+}
+
+.side-hands {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hand.panel {
+  position: static;
+  min-width: auto;
+  right: auto;
+  left: auto;
+  top: auto;
+  bottom: auto;
+}
+
 .tile {
   background: rgba(255, 255, 255, 0.8);
   border-radius: 16px;
@@ -346,5 +391,17 @@ select {
   .board-wrap {
     width: min(92vmin, 86vh);
     height: min(92vmin, 86vh);
+  }
+
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .center-row {
+    grid-column: auto;
+  }
+
+  .side-hands {
+    width: 100%;
   }
 }
