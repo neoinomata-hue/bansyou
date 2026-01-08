@@ -38,14 +38,39 @@ export default function Home() {
 
       <main>
         <section className="grid">
-          <a className="btn secondary" href="/board-create.html">盤作成</a>
-          <a className="btn secondary" href="/piece-create.html">駒作成</a>
-          <a className="btn secondary" href="/game-setup.html">ゲーム作成</a>
-          <a className="btn secondary" href="/board-list.html">盤一覧</a>
-          <a className="btn secondary" href="/piece-list.html">駒一覧</a>
-          <a className="btn secondary" href="/game-list.html">ゲーム一覧</a>
+          <div className="card">
+            <div className="label">盤作成</div>
+            <div className="note">マス数と通行不可マスを設定して、盤の土台を作ります。</div>
+            <a className="btn secondary" href="/board-create.html">盤作成</a>
+          </div>
+          <div className="card">
+            <div className="label">駒作成</div>
+            <div className="note">動き方を配置して、独自の駒セットを用意します。</div>
+            <a className="btn secondary" href="/piece-create.html">駒作成</a>
+          </div>
+          <div className="card">
+            <div className="label">ゲーム作成</div>
+            <div className="note">盤と駒を配置し、持ち駒ルールを設定して保存します。</div>
+            <a className="btn secondary" href="/game-setup.html">ゲーム作成</a>
+          </div>
+          <div className="card">
+            <div className="label">盤一覧</div>
+            <div className="note">作成した盤を確認・編集・削除します。</div>
+            <a className="btn secondary" href="/board-list.html">盤一覧</a>
+          </div>
+          <div className="card">
+            <div className="label">駒一覧</div>
+            <div className="note">作成した駒を確認・編集・削除します。</div>
+            <a className="btn secondary" href="/piece-list.html">駒一覧</a>
+          </div>
+          <div className="card">
+            <div className="label">ゲーム一覧</div>
+            <div className="note">作成したゲームを確認・編集・削除します。</div>
+            <a className="btn secondary" href="/game-list.html">ゲーム一覧</a>
+          </div>
           <div className="card">
             <div className="label">作成したゲームをプレイする</div>
+            <div className="note">保存済みゲームを選び、盤上で動かして確認します。</div>
             <div className="row">
               <select
                 value={selected}
