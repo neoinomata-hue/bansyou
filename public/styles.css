@@ -343,17 +343,19 @@ select {
 
 .play-layout {
   align-items: flex-start;
+  justify-content: center;
 }
 
 .play-layout .board-area {
   align-items: flex-start;
+  justify-content: flex-start;
+  flex: 0 0 auto;
 }
 
 .side-hands {
   width: 220px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   height: min(86vmin, 88vh);
 }
 
@@ -366,12 +368,14 @@ select {
   bottom: auto;
 }
 
-.hand.panel.p1 {
-  align-self: flex-end;
+.side-hands.left {
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
-.hand.panel.p2 {
-  align-self: flex-start;
+.side-hands.right {
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
 .tile {
